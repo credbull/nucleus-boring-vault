@@ -21,3 +21,4 @@ broadcast/*
 node_modules/
 
 .vscode
+.idea
