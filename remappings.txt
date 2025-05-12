@@ -3,7 +3,13 @@
 forge-std/=lib/forge-std/src/
 @ds-test/=lib/forge-std/lib/ds-test/src/
 ds-test/=lib/forge-std/lib/ds-test/src/
-@openzeppelin/=lib/openzeppelin-contracts/
+@openzeppelin/contracts/=lib/credbull-defi/packages/contracts/lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/
 @ion-protocol/=lib/ion-protocol/src/
 
 @layerzerolabs/=node_modules/@layerzerolabs/
+
+openzeppelin-contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/
+@credbull/=lib/credbull-defi/packages/contracts/src/
+@credbull-test/=lib/credbull-defi/packages/contracts/test/
+@script/=lib/credbull-defi/packages/contracts/script/
+@test/=lib/credbull-defi/packages/contracts/test/
