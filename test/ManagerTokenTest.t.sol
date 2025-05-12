@@ -21,8 +21,6 @@ contract ManagerTokenTest is Test, ManagerTestBase {
     SimpleUSDC private _usdc;
     SimpleUSDC private _usdt;
 
-    address private _owner = makeAddr("owner");
-    address private _strategist = makeAddr("strategist");
     address private zeroAddress = address(0);
 
     function setUp() external {
@@ -31,58 +29,11 @@ contract ManagerTokenTest is Test, ManagerTestBase {
 
         _boringVault = new BoringVault(_owner, "Test Boring Vault", "TBV", 18);
         _manager = new ManagerWithMerkleVerification(_owner, address(_boringVault), zeroAddress);
+        _setupAuth(_boringVault, _manager);
 
         // TODO - confirm if we need this in the general case
         _rawDataDecoderAndSanitizerAddr =
             address(new EtherFiLiquidDecoderAndSanitizer(address(_boringVault), uniswapV3NonFungiblePositionManager));
-
-        RolesAuthority rolesAuthority = new RolesAuthority(_owner, Authority(address(0)));
-
-        // --------------- Auth related ---------------
-        vm.startPrank(_owner);
-
-        // set up the roles
-
-        // manage the boring vault
-        rolesAuthority.setRoleCapability(
-            Roles.manager(),
-            address(_boringVault),
-            bytes4(keccak256(abi.encodePacked("manage(address,bytes,uint256)"))),
-            true
-        );
-        rolesAuthority.setRoleCapability(
-            Roles.manager(),
-            address(_boringVault),
-            bytes4(keccak256(abi.encodePacked("manage(address[],bytes[],uint256[])"))),
-            true
-        );
-
-        // manage the manager
-        rolesAuthority.setRoleCapability(
-            Roles.admin(), address(_manager), ManagerWithMerkleVerification.setManageRoot.selector, true
-        );
-        rolesAuthority.setRoleCapability(
-            Roles.strategist(),
-            address(_manager),
-            ManagerWithMerkleVerification.manageVaultWithMerkleVerification.selector,
-            true
-        );
-        rolesAuthority.setRoleCapability(
-            Roles.managerInternal(),
-            address(_manager),
-            ManagerWithMerkleVerification.manageVaultWithMerkleVerification.selector,
-            true
-        );
-
-        rolesAuthority.setUserRole(_strategist, Roles.strategist(), true);
-        rolesAuthority.setUserRole(address(_manager), Roles.managerInternal(), true);
-        rolesAuthority.setUserRole(_owner, Roles.admin(), true);
-        rolesAuthority.setUserRole(address(_manager), Roles.manager(), true);
-
-        _boringVault.setAuthority(rolesAuthority);
-        _manager.setAuthority(rolesAuthority);
-        vm.stopPrank();
-        // --------------- end Auth related ---------------
     }
 
     function _rawDataDecoderAndSanitizer()

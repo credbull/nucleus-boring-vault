@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.21;
 
+import { BoringVault } from "src/base/BoringVault.sol";
+import { ManagerWithMerkleVerification } from "src/base/Roles/ManagerWithMerkleVerification.sol";
 import { MainnetAddresses } from "test/resources/MainnetAddresses.sol";
 import { SafeTransferLib } from "@solmate/utils/SafeTransferLib.sol";
 import { ERC20 } from "@solmate/tokens/ERC20.sol";
@@ -41,6 +43,65 @@ library Roles {
 
 abstract contract ManagerTestBase is Test, MainnetAddresses {
     using SafeTransferLib for ERC20;
+
+    address internal _owner = makeAddr("owner");
+    address internal _strategist = makeAddr("strategist");
+
+    function _setupAuth(
+        BoringVault boringVault,
+        ManagerWithMerkleVerification manager
+    )
+        internal
+        virtual
+        returns (RolesAuthority rolesAuthority_)
+    {
+        RolesAuthority rolesAuthority = new RolesAuthority(_owner, Authority(address(0)));
+
+        vm.startPrank(_owner);
+
+        // boringVault auth
+        rolesAuthority.setRoleCapability(
+            Roles.manager(),
+            address(boringVault),
+            bytes4(keccak256(abi.encodePacked("manage(address,bytes,uint256)"))),
+            true
+        );
+        rolesAuthority.setRoleCapability(
+            Roles.manager(),
+            address(boringVault),
+            bytes4(keccak256(abi.encodePacked("manage(address[],bytes[],uint256[])"))),
+            true
+        );
+        boringVault.setAuthority(rolesAuthority);
+
+        // manager auth
+        rolesAuthority.setRoleCapability(
+            Roles.admin(), address(manager), ManagerWithMerkleVerification.setManageRoot.selector, true
+        );
+        rolesAuthority.setRoleCapability(
+            Roles.strategist(),
+            address(manager),
+            ManagerWithMerkleVerification.manageVaultWithMerkleVerification.selector,
+            true
+        );
+        rolesAuthority.setRoleCapability(
+            Roles.managerInternal(),
+            address(manager),
+            ManagerWithMerkleVerification.manageVaultWithMerkleVerification.selector,
+            true
+        );
+        manager.setAuthority(rolesAuthority);
+
+        // user / roles
+        rolesAuthority.setUserRole(_strategist, Roles.strategist(), true);
+        rolesAuthority.setUserRole(address(manager), Roles.managerInternal(), true);
+        rolesAuthority.setUserRole(_owner, Roles.admin(), true);
+        rolesAuthority.setUserRole(address(manager), Roles.manager(), true);
+
+        vm.stopPrank();
+
+        return rolesAuthority;
+    }
 
     function _rawDataDecoderAndSanitizer() internal view virtual returns (address rawDataDecoderAndSanitizer_);
 
