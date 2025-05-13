@@ -24,14 +24,14 @@ import { Test, stdStorage, StdStorage, stdError, console } from "@forge-std/Test
 contract ManagerLiquidStone is ManagerTestBase, LiquidContinuousMultiTokenVaultTestBase {
     BoringVault private _boringVault;
     ManagerWithMerkleVerification private _manager;
-    address public _rawDataDecoderAndSanitizerAddr;
+    address public _rawDataDecoderAndSanitizer;
 
     function test__ManagerLiquidStone__Deposit() external {
         uint256 period = 10;
 
         _boringVault = new BoringVault(_admin, "Test Boring Vault", "TBV", 18);
         _manager = new ManagerWithMerkleVerification(_admin, address(_boringVault), _zeroAddress);
-        _rawDataDecoderAndSanitizerAddr =
+        _rawDataDecoderAndSanitizer =
             address(new EtherFiLiquidDecoderAndSanitizer(address(_boringVault), uniswapV3NonFungiblePositionManager));
         _setupAuth(_boringVault, _manager);
 
@@ -53,7 +53,7 @@ contract ManagerLiquidStone is ManagerTestBase, LiquidContinuousMultiTokenVaultT
         leafs[1] = ManageLeaf(address(_liquidVault), false, "deposit(uint256,address)", new address[](1));
         leafs[1].argumentAddresses[0] = address(_boringVault);
 
-        bytes32[][] memory manageTree = _generateMerkleTree(leafs);
+        bytes32[][] memory manageTree = _generateMerkleTree(leafs, _rawDataDecoderAndSanitizer);
 
         vm.prank(_admin);
         _manager.setManageRoot(_strategist, manageTree[1][0]);
@@ -67,14 +67,14 @@ contract ManagerLiquidStone is ManagerTestBase, LiquidContinuousMultiTokenVaultT
         targetData[0] = abi.encodeWithSelector(ERC20.approve.selector, address(_liquidVault), testParams.principal);
         targetData[1] = abi.encodeWithSignature("deposit(uint256,address)", testParams.principal, address(_boringVault));
 
-        (bytes32[][] memory manageProofs) = _getProofsUsingTree(leafs, manageTree);
+        (bytes32[][] memory manageProofs) = _getProofsUsingTree(leafs, manageTree, _rawDataDecoderAndSanitizer);
 
         uint256[] memory values = new uint256[](2);
 
         // TODO - enhance the decoder and sanitizer to add requestDeposit()
         address[] memory decodersAndSanitizers = new address[](2);
-        decodersAndSanitizers[0] = _rawDataDecoderAndSanitizer();
-        decodersAndSanitizers[1] = _rawDataDecoderAndSanitizer();
+        decodersAndSanitizers[0] = _rawDataDecoderAndSanitizer;
+        decodersAndSanitizers[1] = _rawDataDecoderAndSanitizer;
 
         vm.startPrank(_strategist);
         _manager.manageVaultWithMerkleVerification(manageProofs, decodersAndSanitizers, targets, targetData, values);
@@ -87,15 +87,5 @@ contract ManagerLiquidStone is ManagerTestBase, LiquidContinuousMultiTokenVaultT
         // TODO - call redeem
 
         // TODO - verify redeem
-    }
-
-    function _rawDataDecoderAndSanitizer()
-        internal
-        view
-        virtual
-        override
-        returns (address rawDataDecoderAndSanitizer_)
-    {
-        return _rawDataDecoderAndSanitizerAddr;
     }
 }

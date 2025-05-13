@@ -104,8 +104,6 @@ abstract contract ManagerTestBase is Test, MainnetAddresses {
         return rolesAuthority;
     }
 
-    function _rawDataDecoderAndSanitizer() internal view virtual returns (address rawDataDecoderAndSanitizer_);
-
     // ========================================= HELPER FUNCTIONS =========================================
     bool doNothing = true;
 
@@ -139,7 +137,8 @@ abstract contract ManagerTestBase is Test, MainnetAddresses {
 
     function _getProofsUsingTree(
         ManageLeaf[] memory manageLeafs,
-        bytes32[][] memory tree
+        bytes32[][] memory tree,
+        address rawDataDecoderAndSanitizer
     )
         internal
         view
@@ -150,7 +149,7 @@ abstract contract ManagerTestBase is Test, MainnetAddresses {
             // Generate manage proof.
             bytes4 selector = bytes4(keccak256(abi.encodePacked(manageLeafs[i].signature)));
             bytes memory rawDigest = abi.encodePacked(
-                _rawDataDecoderAndSanitizer(), manageLeafs[i].target, manageLeafs[i].canSendValue, selector
+                rawDataDecoderAndSanitizer, manageLeafs[i].target, manageLeafs[i].canSendValue, selector
             );
             uint256 argumentAddressesLength = manageLeafs[i].argumentAddresses.length;
             for (uint256 j; j < argumentAddressesLength; ++j) {
@@ -203,14 +202,21 @@ abstract contract ManagerTestBase is Test, MainnetAddresses {
         address[] argumentAddresses;
     }
 
-    function _generateMerkleTree(ManageLeaf[] memory manageLeafs) internal view returns (bytes32[][] memory tree) {
+    function _generateMerkleTree(
+        ManageLeaf[] memory manageLeafs,
+        address rawDataDecoderAndSanitizer
+    )
+        internal
+        view
+        returns (bytes32[][] memory tree)
+    {
         uint256 leafsLength = manageLeafs.length;
         bytes32[][] memory leafs = new bytes32[][](1);
         leafs[0] = new bytes32[](leafsLength);
         for (uint256 i; i < leafsLength; ++i) {
             bytes4 selector = bytes4(keccak256(abi.encodePacked(manageLeafs[i].signature)));
             bytes memory rawDigest = abi.encodePacked(
-                _rawDataDecoderAndSanitizer(), manageLeafs[i].target, manageLeafs[i].canSendValue, selector
+                rawDataDecoderAndSanitizer, manageLeafs[i].target, manageLeafs[i].canSendValue, selector
             );
             uint256 argumentAddressesLength = manageLeafs[i].argumentAddresses.length;
             for (uint256 j; j < argumentAddressesLength; ++j) {

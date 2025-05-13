@@ -115,16 +115,6 @@ contract ManagerWithMerkleVerificationTest is ManagerTestBase {
         rolesAuthority.setPublicCapability(address(boringVault), bytes4(0), true);
     }
 
-    function _rawDataDecoderAndSanitizer()
-        internal
-        view
-        virtual
-        override
-        returns (address rawDataDecoderAndSanitizer_)
-    {
-        return rawDataDecoderAndSanitizer;
-    }
-
     function testManagerMerkleVerificationHappyPath() external {
         // Allow the manager to call the USDC approve function to a specific address,
         // and the USDT transfer function to a specific address.
@@ -3032,6 +3022,21 @@ contract ManagerWithMerkleVerificationTest is ManagerTestBase {
             userData = hex"DEAD01";
             manager.receiveFlashLoan(tokens, amounts, amounts, userData);
         }
+    }
+
+    function _getProofsUsingTree(
+        ManageLeaf[] memory manageLeafs,
+        bytes32[][] memory tree
+    )
+        internal
+        view
+        returns (bytes32[][] memory proofs)
+    {
+        return super._getProofsUsingTree(manageLeafs, tree, rawDataDecoderAndSanitizer);
+    }
+
+    function _generateMerkleTree(ManageLeaf[] memory manageLeafs) internal view returns (bytes32[][] memory tree) {
+        return super._generateMerkleTree(manageLeafs, rawDataDecoderAndSanitizer);
     }
 
     function withdraw(uint256 amount) external {
