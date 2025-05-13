@@ -44,8 +44,9 @@ library Roles {
 abstract contract ManagerTestBase is Test, MainnetAddresses {
     using SafeTransferLib for ERC20;
 
-    address internal _owner = makeAddr("owner");
+    address internal _admin = makeAddr("admin");
     address internal _strategist = makeAddr("strategist");
+    address internal _zeroAddress = address(0);
 
     function _setupAuth(
         BoringVault boringVault,
@@ -55,9 +56,9 @@ abstract contract ManagerTestBase is Test, MainnetAddresses {
         virtual
         returns (RolesAuthority rolesAuthority_)
     {
-        RolesAuthority rolesAuthority = new RolesAuthority(_owner, Authority(address(0)));
+        RolesAuthority rolesAuthority = new RolesAuthority(_admin, Authority(address(0)));
 
-        vm.startPrank(_owner);
+        vm.startPrank(_admin);
 
         // boringVault auth
         rolesAuthority.setRoleCapability(
@@ -95,7 +96,7 @@ abstract contract ManagerTestBase is Test, MainnetAddresses {
         // user / roles
         rolesAuthority.setUserRole(_strategist, Roles.strategist(), true);
         rolesAuthority.setUserRole(address(manager), Roles.managerInternal(), true);
-        rolesAuthority.setUserRole(_owner, Roles.admin(), true);
+        rolesAuthority.setUserRole(_admin, Roles.admin(), true);
         rolesAuthority.setUserRole(address(manager), Roles.manager(), true);
 
         vm.stopPrank();

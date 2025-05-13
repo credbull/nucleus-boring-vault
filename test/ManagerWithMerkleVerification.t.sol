@@ -24,7 +24,7 @@ import {
     EigenLayerLSTStakingDecoderAndSanitizer
 } from "src/base/DecodersAndSanitizers/PointFarmingDecoderAndSanitizer.sol";
 
-import { ManagerTestBase, IUNSTETH } from "./ManagerTestBase.t.sol";
+import { ManagerTestBase, IUNSTETH } from "./merkle-managers/ManagerTestBase.t.sol";
 
 import { Test, stdStorage, StdStorage, stdError, console } from "@forge-std/Test.sol";
 
